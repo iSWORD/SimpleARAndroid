@@ -10,17 +10,17 @@ if (propertiesFile.exists()) {
 
 model {
     android {
-        compileSdkVersion = 23
-        buildToolsVersion = '23.0.2'
+        compileSdkVersion = 26
+        buildToolsVersion = '26.0.0'
         defaultConfig.with {
             minSdkVersion.apiLevel = 9
-            targetSdkVersion.apiLevel = 23
+            targetSdkVersion.apiLevel = 26
             versionCode = 1
             versionName = '0.0.1'
         }
         ndk {
             moduleName = 'ndk_helper'
-            stl       = 'gnustl_static'
+            stl = 'gnustl_static'
             ldLibs.addAll(['log', 'android', 'EGL', 'GLESv2'])
             ldFlags.add('-c')
         }

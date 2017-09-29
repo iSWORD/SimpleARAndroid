@@ -45,7 +45,7 @@ public class SimpleARActivity extends Activity{
         AssetManager assetManager = getAssets();
         String pathToInternalDir = getFilesDir().getAbsolutePath();
 
-        mCameraObject = new CameraClass();
+        mCameraObject = new CameraClass(this);
         if(!mCameraObject.IsResolutionSupported()) {
             ShowExitDialog(this, getString(R.string.exit_no_resolution));
             return;

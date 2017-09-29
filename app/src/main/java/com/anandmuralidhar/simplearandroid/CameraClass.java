@@ -16,57 +16,71 @@
 
 package com.anandmuralidhar.simplearandroid;
 
+import android.app.Activity;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
+
 import java.io.IOException;
 import java.util.List;
 
-public class CameraClass{
+public class CameraClass {
 
     /**
      * Choose back camera by default
      */
     private static int cameraIndex = Camera.CameraInfo.CAMERA_FACING_BACK;
+    private final Activity context;
     /**
      * Camera preview resolution is 720p: 1280x720
      */
     private int mPreviewWidth = 1280;
     private int mPreviewHeight = 720;
 
-    private static Camera mCamera=null;
+    private static Camera mCamera = null;
     private SurfaceTexture dummySurfaceTexture;
     private byte mPreviewBuffer[] = null;
-    private float cameraFOVLandscape=0, cameraFOVPortrait=0;
+    private float cameraFOVLandscape = 0, cameraFOVPortrait = 0;
     private boolean isResolutionSupported = false;
     private static CameraHandlerThread mCameraThread = null;
-    public  int GetPreviewWidth(){ return mPreviewWidth; }
-    public  int GetPreviewHeight(){ return mPreviewHeight; }
-    public  float GetFOV() {return cameraFOVLandscape;}
-    public  boolean IsResolutionSupported(){ return isResolutionSupported; }
+
+    public int GetPreviewWidth() {
+        return mPreviewWidth;
+    }
+
+    public int GetPreviewHeight() {
+        return mPreviewHeight;
+    }
+
+    public float GetFOV() {
+        return cameraFOVLandscape;
+    }
+
+    public boolean IsResolutionSupported() {
+        return isResolutionSupported;
+    }
 
     /**
      * JNI call for sending camera image to native code for processing and display
      */
-    private native void SendCamImageToNative(byte [] data, int mPreviewHeight, int mPreviewWidth);
+    private native void SendCamImageToNative(byte[] data, int mPreviewHeight, int mPreviewWidth);
 
-    public CameraClass() {
-
+    public CameraClass(Activity context) {
+        this.context = context;
         InitializeCamera();
-
     }
 
     /**
      * Open the camera on a separate thread. Set its params and preview callback function
      */
     void InitializeCamera() {
-        
+
         if (mCamera != null) {
             return;
         }
-        
+
         try {
 
             if (mCameraThread == null) {
@@ -76,13 +90,11 @@ public class CameraClass{
             synchronized (mCameraThread) {
                 mCameraThread.OpenCamera();
             }
-
         } catch (Exception e) {
-        
+
             Log.e("CameraClass", "Unable to open camera!");
             System.err.println(e.getMessage());
             return;
-        
         }
         Log.d("CameraClass", "Got a camera instance");
 
@@ -123,8 +135,7 @@ public class CameraClass{
             // wait to be notified once camera is opened since we setup its params next
             try {
                 wait();
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 Log.e("CameraClass", "wait was interrupted");
             }
         }
@@ -148,7 +159,7 @@ public class CameraClass{
             dummySurfaceTexture = new SurfaceTexture(10);
             mCamera.setPreviewTexture(dummySurfaceTexture);
         } catch (IOException e1) {
-            Log.e("CameraClass",e1.getMessage());
+            Log.e("CameraClass", e1.getMessage());
         }
     }
 
@@ -174,7 +185,7 @@ public class CameraClass{
         }
 
         param.setPreviewSize(mPreviewWidth, mPreviewHeight);
-        Log.d("CameraClass", "Setting preview resolution to " + param.getPreviewSize().width + "x" 
+        Log.d("CameraClass", "Setting preview resolution to " + param.getPreviewSize().width + "x"
                 + param.getPreviewSize().height);
 
         SaveCameraFOV(param);
@@ -182,8 +193,16 @@ public class CameraClass{
         DetectAllFocusModesAvailable(param);
         EnableContinuousAutoFocus(param);
         param.setRecordingHint(true);
-
+        mCamera.setDisplayOrientation(getRotationDegree(context, 0));
         mCamera.setParameters(param);
+    }
+
+    private int getRotationDegree(Activity activity, int cameraId) {
+        Camera.CameraInfo info = new Camera.CameraInfo();
+        Camera.getCameraInfo(cameraId, info);
+        int rotation = activity.getWindowManager().getDefaultDisplay()
+                .getRotation() * 90;
+        return (info.orientation - rotation + 360) % 360;
     }
 
     /**
@@ -201,12 +220,11 @@ public class CameraClass{
         }
 
         // stop camera handler thread
-        if(mCameraThread != null) {
+        if (mCameraThread != null) {
             mCameraThread.quit();
             mCameraThread = null;
         }
     }
-
 
     /**
      * Start camera's preview callbacks
@@ -214,13 +232,12 @@ public class CameraClass{
     public void StartCamera() {
 
         try {
-            Log.d("CameraClass","Starting camera preview");
+            Log.d("CameraClass", "Starting camera preview");
             mCamera.startPreview();
         } catch (Exception e) {
-            Log.d("CameraClass","Unable to start camera preview! " + e.getLocalizedMessage());
+            Log.d("CameraClass", "Unable to start camera preview! " + e.getLocalizedMessage());
         }
     }
-
 
     /**
      * Camera's preview callback: sends data containing camera image to native code
@@ -237,7 +254,6 @@ public class CameraClass{
             camera.addCallbackBuffer(data);
         }
     };
-
 
     /**
      * Save camera's field-of-view for later use in native code
@@ -257,10 +273,10 @@ public class CameraClass{
         cameraFOVPortrait = fovXDeg;
 
         // calculate vertical FOV for landscape mode
-        float cameraAspectRatio = (float)mPreviewWidth/mPreviewHeight;
-        cameraFOVLandscape = (float)(2*Math.atan(Math.tan(Math.toRadians(
-                (double)cameraFOVPortrait)/2) / cameraAspectRatio));
-        cameraFOVLandscape = (float)Math.toDegrees(cameraFOVLandscape);
+        float cameraAspectRatio = (float) mPreviewWidth / mPreviewHeight;
+        cameraFOVLandscape = (float) (2 * Math.atan(Math.tan(Math.toRadians(
+                (double) cameraFOVPortrait) / 2) / cameraAspectRatio));
+        cameraFOVLandscape = (float) Math.toDegrees(cameraFOVLandscape);
 
         Log.d("CameraClass", "FOV for Landscape " + cameraFOVLandscape);
     }
@@ -293,7 +309,6 @@ public class CameraClass{
             param.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
             Log.d("CameraClass",
                     "Setting focus mode to FOCUS_MODE_CONTINUOUS_PICTURE");
-
         } else if (isAutoFocusAvailable) {
             param.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
             Log.d("CameraClass",
@@ -304,5 +319,4 @@ public class CameraClass{
         }
         return param;
     }
-
 }

@@ -28,7 +28,7 @@ SimpleARClass::SimpleARClass() {
     back = NULL;
 
     cornerDetector = cv::ORB::create(750); // choosing ORB detector with default parameters
-    matcher        = cv::DescriptorMatcher::create("BruteForce-Hamming");
+    matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
 
     modelObject = NULL;
 
@@ -36,23 +36,23 @@ SimpleARClass::SimpleARClass() {
     gravity.assign(3, 0);
     gravity[2] = 1.0f;
 
-    doubleTapAction     = false;
-    trackingIsOn        = false;
-    pnpResultIsValid    = false;
-    renderModel         = false;
-    newPnpResult        = false;
-    previewScaleFactor  = 0.5; // camera image is downscaled to half its original size
+    doubleTapAction = false;
+    trackingIsOn = false;
+    pnpResultIsValid = false;
+    renderModel = false;
+    newPnpResult = false;
+    previewScaleFactor = 0.5; // camera image is downscaled to half its original size
 
-    translationVector       = cv::Mat::zeros(3,1,CV_32F);
-    translationVectorCopy   = cv::Mat::zeros(3,1,CV_32F);
-    rotationVector          = cv::Mat::zeros(3,1,CV_32F);
-    rotationVectorCopy      = cv::Mat::zeros(3,1,CV_32F);
+    translationVector = cv::Mat::zeros(3, 1, CV_32F);
+    translationVectorCopy = cv::Mat::zeros(3, 1, CV_32F);
+    rotationVector = cv::Mat::zeros(3, 1, CV_32F);
+    rotationVectorCopy = cv::Mat::zeros(3, 1, CV_32F);
 }
 
 SimpleARClass::~SimpleARClass() {
 
     MyLOGD("SimpleARClass::SimpleARClass");
-    if(back) {
+    if (back) {
         delete back;
         back = NULL;
     }
@@ -74,21 +74,21 @@ void SimpleARClass::PerformGLInits() {
     MyGLInits();
 
     // create MyGLCamera object and set default position for the object
-    myGLCamera = new MyGLCamera(cameraFOV,0);
+    myGLCamera = new MyGLCamera(cameraFOV, 0);
 
-    back = new BackTexture(cameraPreviewWidth*previewScaleFactor,
-                           cameraPreviewHeight*previewScaleFactor);
+    back = new BackTexture(cameraPreviewWidth * previewScaleFactor,
+                           cameraPreviewHeight * previewScaleFactor);
 
     modelObject = new AssimpLoader();
 
     // extract the OBJ and companion files from assets
     // its a long list since ourWorld.obj has 6 textures corresponding to faces of the cube
     std::string objFilename, mtlFilename, texFilename;
-    bool isFilesPresent  =
+    bool isFilesPresent =
             gHelperObject->ExtractAssetReturnFilename("amenemhat/amenemhat.obj", objFilename) &&
             gHelperObject->ExtractAssetReturnFilename("amenemhat/amenemhat.mtl", mtlFilename) &&
             gHelperObject->ExtractAssetReturnFilename("amenemhat/amenemhat.jpg", texFilename);
-    if( !isFilesPresent ) {
+    if (!isFilesPresent) {
         MyLOGE("Model %s does not exist!", objFilename.c_str());
         return;
     }
@@ -111,7 +111,7 @@ void SimpleARClass::Render() {
 
     // render the camera image as the background texture
     cameraMutex.try_lock();
-    if(newCameraImage) {
+    if (newCameraImage) {
         back->LoadBackImg(cameraImageForBack);
     }
     newCameraImage = false;
@@ -119,10 +119,10 @@ void SimpleARClass::Render() {
     back->Render();
 
     // render the 3D model if we have tracked reference marker in query image
-    if(trackingIsOn) {
+    if (trackingIsOn) {
 
         pnpMutex.try_lock();
-        if(newPnpResult) {
+        if (newPnpResult) {
             if (pnpResultIsValid) {
 
                 // make a copy of pnp result, it will be retained till result is updated again
@@ -143,8 +143,8 @@ void SimpleARClass::Render() {
         pnpMutex.unlock();
 
 
-        cv::Mat defaultModelPosition = cv::Mat::zeros(3,1,CV_64F);
-        defaultModelPosition.at<double>(2,0) = -CAM_HEIGHT_FROM_FLOOR;
+        cv::Mat defaultModelPosition = cv::Mat::zeros(3, 1, CV_64F);
+        defaultModelPosition.at<double>(2, 0) = -CAM_HEIGHT_FROM_FLOOR;
         myGLCamera->UpdateModelMat(translationVectorCopy, rotationVectorCopy, defaultModelPosition);
 
         gravityMutex.lock();
@@ -185,61 +185,23 @@ void SimpleARClass::ProcessCameraImage(cv::Mat cameraRGBImage) {
     cameraImageForBack = cameraRGBImage.clone();
 
     // resize the camera preview image to a smaller size to speedup processing
-    cv::resize(cameraImageForBack,cameraImageForBack, cv::Size(),
+    cv::resize(cameraImageForBack, cameraImageForBack, cv::Size(),
                previewScaleFactor, previewScaleFactor);
 
     // OpenCV image needs to be flipped for OpenGL
-    cv::flip(cameraImageForBack, cameraImageForBack, 0);
-
-    if(doubleTapAction) {
-        // if we are able to detect required number of feature points, then start tracking
-        if(DetectKeypointsInReferenceImage()) {
-
-            trackingIsOn = true;
-
-        } else {
-
-            trackingIsOn = false;
-
-        }
-        doubleTapAction = false;
-
-    } else if(trackingIsOn) {
-
-        // if enough feature points are detected in query image, then try to match them
-        // else indicate to render loop that matching has failed for this frame
-        if(MatchKeypointsInQueryImage()) {
-
-            TrackKeypointsAndUpdatePose();
-
-        } else {
-            pnpMutex.lock();
-            newPnpResult = true;        // new frame was processed ...
-            pnpResultIsValid = false;   // ... but no match.
-            pnpMutex.unlock();
-        }
-
-    } else {
-
-        // simply highlight corners in the image
-        DetectAndHighlightCorners();
-
-    }
-
-    newCameraImage = true; // indicate to Render() that a new image is available
-
-    cameraMutex.unlock();
+    cv::flip(cameraImageForBack, cameraImageForBack, 1);
+    newCameraImage = true;
 }
 
 /**
  * Use the corner detector to find feature points and draw small circles around them
  */
-void SimpleARClass::DetectAndHighlightCorners(){
+void SimpleARClass::DetectAndHighlightCorners() {
 
     cornerDetector->detect(cameraImageForBack, keyPoints);
-    for(int i=0;i<keyPoints.size();i++){
+    for (int i = 0; i < keyPoints.size(); i++) {
 
-        cv::circle(cameraImageForBack, keyPoints[i].pt, 5, cv::Scalar(255,0,0));
+        cv::circle(cameraImageForBack, keyPoints[i].pt, 5, cv::Scalar(255, 0, 0));
 
     }
 }
@@ -287,9 +249,9 @@ bool SimpleARClass::DetectKeypointsInReferenceImage() {
     //Detect feature points and descriptors in reference image
     cornerDetector->detectAndCompute(cameraImageForBack, cv::noArray(),
                                      referenceKeypoints, referenceDescriptors);
-    MyLOGD("Number of feature points in source frame %d", (int)referenceKeypoints.size());
+    MyLOGD("Number of feature points in source frame %d", (int) referenceKeypoints.size());
 
-    if(referenceKeypoints.size() < MIN_KPS_IN_FRAME){
+    if (referenceKeypoints.size() < MIN_KPS_IN_FRAME) {
         return false;
     }
 
@@ -306,7 +268,7 @@ bool SimpleARClass::DetectKeypointsInReferenceImage() {
 /**
  * Match keypoints in new image with reference frame. Compute homography to determine inliers
  */
-    bool SimpleARClass::MatchKeypointsInQueryImage() {
+bool SimpleARClass::MatchKeypointsInQueryImage() {
 
     std::vector<cv::KeyPoint> queryKeypoints;
     cv::Mat queryDescriptors;
@@ -368,7 +330,7 @@ bool SimpleARClass::DetectKeypointsInReferenceImage() {
         MyLOGD("Not enough kps match after homography filter!");
         return false;
     }
-    MyLOGD("Success, Number of keypoint matches = %d", (int)sourceInlierKeypoints.size());
+    MyLOGD("Success, Number of keypoint matches = %d", (int) sourceInlierKeypoints.size());
 
     // draw a rectangle marking reference frame in current image
     DrawShiftedCorners(cameraImageForBack, homography);
@@ -382,8 +344,8 @@ bool SimpleARClass::DetectKeypointsInReferenceImage() {
 void SimpleARClass::TrackKeypointsAndUpdatePose() {
 
     // Use inliers as reference points
-    sourceInlierPoints  = Keypoint2Point(sourceInlierKeypoints);
-    queryInlierPoints   = Keypoint2Point(queryInlierKeypoints);
+    sourceInlierPoints = Keypoint2Point(sourceInlierKeypoints);
+    queryInlierPoints = Keypoint2Point(queryInlierKeypoints);
     int num_reference_pts = sourceInlierKeypoints.size();
 
     // Project inlier points onto an imaginary floor to get their 3D locations
@@ -409,10 +371,9 @@ void SimpleARClass::TrackKeypointsAndUpdatePose() {
     newPnpResult = true; // indicate to render loop that a new result is available
     pnpMutex.unlock();
 
-    if(!pnpResultIsValid) {
+    if (!pnpResultIsValid) {
         MyLOGD("No solution to pnp!");
-    }
-    else{
+    } else {
         PrintCVMat(translationVector.t());
         PrintCVMat(rotationVector.t());
     }
