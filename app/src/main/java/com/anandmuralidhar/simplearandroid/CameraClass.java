@@ -193,7 +193,8 @@ public class CameraClass {
         DetectAllFocusModesAvailable(param);
         EnableContinuousAutoFocus(param);
         param.setRecordingHint(true);
-        mCamera.setDisplayOrientation(getRotationDegree(context, 0));
+//        mCamera.setDisplayOrientation(getRotationDegree(context, 0));
+//        mCamera.setDisplayOrientation(270);
         mCamera.setParameters(param);
     }
 

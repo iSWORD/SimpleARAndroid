@@ -25,17 +25,18 @@ import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
 
-
-public class SimpleARActivity extends Activity{
+public class SimpleARActivity extends Activity {
 
     private GLSurfaceView mGLView = null;
     private CameraClass mCameraObject;
-    private boolean appIsExiting=false;
+    private boolean appIsExiting = false;
     private GestureClass mGestureObject;
     private SensorClass mSensorObject;
 
     private native void CreateObjectNative(AssetManager assetManager, String pathToInternalDir);
+
     private native void DeleteObjectNative();
+
     private native void SetCameraParamsNative(int previewWidth, int previewHeight, float cameraFOV);
 
     @Override
@@ -46,7 +47,7 @@ public class SimpleARActivity extends Activity{
         String pathToInternalDir = getFilesDir().getAbsolutePath();
 
         mCameraObject = new CameraClass(this);
-        if(!mCameraObject.IsResolutionSupported()) {
+        if (!mCameraObject.IsResolutionSupported()) {
             ShowExitDialog(this, getString(R.string.exit_no_resolution));
             return;
         }
@@ -58,7 +59,7 @@ public class SimpleARActivity extends Activity{
 
         // layout has only two components, a GLSurfaceView and a TextView
         setContentView(R.layout.simplear_layout);
-        mGLView = (MyGLSurfaceView) findViewById (R.id.gl_surface_view);
+        mGLView = (MyGLSurfaceView) findViewById(R.id.gl_surface_view);
 
         // mGestureObject will handle touch gestures on the screen
         mGestureObject = new GestureClass(this);
@@ -71,11 +72,10 @@ public class SimpleARActivity extends Activity{
         });
 
         mSensorObject = new SensorClass(this, mGLView);
-        if(!mSensorObject.isSensorsAvailable()) {
+        if (!mSensorObject.isSensorsAvailable()) {
             ShowExitDialog(this, getResources().getString(R.string.exit_no_sensor));
-            appIsExiting=true;
+            appIsExiting = true;
         }
-
     }
 
     @Override
@@ -83,7 +83,7 @@ public class SimpleARActivity extends Activity{
 
         super.onResume();
 
-        if(appIsExiting) {
+        if (appIsExiting) {
             return;
         }
 
@@ -92,17 +92,15 @@ public class SimpleARActivity extends Activity{
             mGLView.onResume();
         }
 
-
-        if(!mSensorObject.RegisterSensors()){
+        if (!mSensorObject.RegisterSensors()) {
             ShowExitDialog(this, getResources().getString(R.string.exit_no_reg_sensor));
-            appIsExiting=true;
+            appIsExiting = true;
             return;
         }
 
         // initialize the camera again in case activity was paused and resumed
         mCameraObject.InitializeCamera();
         mCameraObject.StartCamera();
-
     }
 
     @Override
@@ -111,14 +109,13 @@ public class SimpleARActivity extends Activity{
         super.onPause();
 
         // Android suggests that we call onPause on GLSurfaceView
-        if(mGLView != null) {
+        if (mGLView != null) {
             mGLView.onPause();
         }
 
         mSensorObject.UnregisterSensors();
 
         mCameraObject.StopCamera();
-
     }
 
     @Override
@@ -128,10 +125,9 @@ public class SimpleARActivity extends Activity{
 
         // We are exiting the activity, let's delete the native objects
         DeleteObjectNative();
-
     }
 
-    public void ShowExitDialog(final Activity activity, String exitMessage){
+    public void ShowExitDialog(final Activity activity, String exitMessage) {
         appIsExiting = true;
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(activity);
         alertDialogBuilder.setMessage(exitMessage)

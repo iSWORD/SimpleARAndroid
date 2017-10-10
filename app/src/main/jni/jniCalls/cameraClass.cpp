@@ -28,11 +28,11 @@ extern SimpleARClass *gSimpleARObject;
  */
 JNIEXPORT void JNICALL
 Java_com_anandmuralidhar_simplearandroid_CameraClass_SendCamImageToNative(JNIEnv *env,
-                                                                              jobject instance,
-                                                                              jbyteArray data_,
-                                                                              jint previewHeight,
-                                                                              jint previewWidth) {
-    if(gSimpleARObject == NULL) {
+                                                                          jobject instance,
+                                                                          jbyteArray data_,
+                                                                          jint previewHeight,
+                                                                          jint previewWidth) {
+    if (gSimpleARObject == NULL) {
         return;
     }
 

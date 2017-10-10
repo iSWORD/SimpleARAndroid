@@ -119,44 +119,28 @@ void SimpleARClass::Render() {
     back->Render();
 
     // render the 3D model if we have tracked reference marker in query image
-    if (trackingIsOn) {
 
-        pnpMutex.try_lock();
-        if (newPnpResult) {
-            if (pnpResultIsValid) {
+    // make a copy of pnp result, it will be retained till result is updated again
+    translationVectorCopy = translationVector.clone();
+    rotationVectorCopy = rotationVector.clone();
 
-                // make a copy of pnp result, it will be retained till result is updated again
-                translationVectorCopy = translationVector.clone();
-                rotationVectorCopy = rotationVector.clone();
-
-                // flip OpenCV results to be consistent with OpenGL's coordinate system
-                translationVectorCopy.at<double>(2, 0) = -translationVectorCopy.at<double>(2, 0);
-                rotationVectorCopy.at<double>(0, 0) = -rotationVectorCopy.at<double>(0, 0);
-                rotationVectorCopy.at<double>(1, 0) = -rotationVectorCopy.at<double>(1, 0);
-                renderModel = true;
-
-            } else {
-                renderModel = false;
-            }
-            newPnpResult = false;
-        }
-        pnpMutex.unlock();
+    // flip OpenCV results to be consistent with OpenGL's coordinate system
+    translationVectorCopy.at<double>(2, 0) = -translationVectorCopy.at<double>(2, 0);
+    rotationVectorCopy.at<double>(0, 0) = -rotationVectorCopy.at<double>(0, 0);
+    rotationVectorCopy.at<double>(1, 0) = -rotationVectorCopy.at<double>(1, 0);
+    renderModel = true;
 
 
-        cv::Mat defaultModelPosition = cv::Mat::zeros(3, 1, CV_64F);
-        defaultModelPosition.at<double>(2, 0) = -CAM_HEIGHT_FROM_FLOOR;
-        myGLCamera->UpdateModelMat(translationVectorCopy, rotationVectorCopy, defaultModelPosition);
+    cv::Mat defaultModelPosition = cv::Mat::zeros(3, 1, CV_64F);
+    defaultModelPosition.at<double>(2, 0) = -CAM_HEIGHT_FROM_FLOOR;
+    myGLCamera->UpdateModelMat(translationVectorCopy, rotationVectorCopy, defaultModelPosition);
 
-        gravityMutex.lock();
-        glm::mat4 mvpMat = myGLCamera->GetMVPAlignedWithGravity(gravity);
-        gravityMutex.unlock();
+    gravityMutex.lock();
+    glm::mat4 mvpMat = myGLCamera->GetMVPAlignedWithGravity(gravity);
+    gravityMutex.unlock();
 
-        if (renderModel) {
-            modelObject->Render3DModel(&mvpMat);
-        } else {
-//            MyLOGD("***not rendering model***");
-        }
-    }
+    modelObject->Render3DModel(&mvpMat);
+
 
     CheckGLError("SimpleARClass::Render");
 
@@ -172,7 +156,7 @@ void SimpleARClass::SetViewport(int width, int height) {
     glViewport(0, 0, width, height);
     CheckGLError("Cube::SetViewport");
 
-    myGLCamera->SetAspectRatio((float) 1280 / 720);
+    myGLCamera->SetAspectRatio((float) 720 / 1280);
 }
 
 /**
@@ -189,8 +173,11 @@ void SimpleARClass::ProcessCameraImage(cv::Mat cameraRGBImage) {
                previewScaleFactor, previewScaleFactor);
 
     // OpenCV image needs to be flipped for OpenGL
-    cv::flip(cameraImageForBack, cameraImageForBack, 1);
-    newCameraImage = true;
+//    cv::flip(cameraImageForBack, cameraImageForBack, 1);
+
+    newCameraImage = true; // indicate to Render() that a new image is available
+
+    cameraMutex.unlock();
 }
 
 /**

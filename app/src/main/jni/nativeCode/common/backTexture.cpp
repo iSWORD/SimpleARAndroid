@@ -27,7 +27,7 @@ BackTexture::BackTexture(int width, int height) {
     vertexAttribute = GetAttributeLocation(shaderProgramID, "vertexPosition");
 
     // create a VBO representing a quad that covers the display
-    const GLfloat vertices[] = {-1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, -1.0f };
+    const GLfloat vertices[] = {-1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, -1.0f};
     glGenBuffers(1, &vertexBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 8, vertices, GL_STATIC_DRAW);
@@ -52,7 +52,7 @@ BackTexture::BackTexture(int width, int height) {
  */
 bool BackTexture::LoadBackImg(cv::Mat backImage) {
 
-    if(backImage.rows!=height || backImage.cols!=width) {
+    if (backImage.rows != height || backImage.cols != width) {
         MyLOGE("Image size does not match texture dims");
         return false;
     }
@@ -76,12 +76,12 @@ void BackTexture::Render() {
     // load background texture
     glActiveTexture(GL_TEXTURE0);
     glUniform1i(textureSamplerLocation, 0);
-    glBindTexture( GL_TEXTURE_2D, textureNameInGL);
+    glBindTexture(GL_TEXTURE_2D, textureNameInGL);
 
     // load vertices of the quad
     glEnableVertexAttribArray(vertexAttribute);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-    glVertexAttribPointer(vertexAttribute, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glVertexAttribPointer(vertexAttribute, 2, GL_FLOAT, GL_FALSE, 0, (void *) 0);
 
     // Draw the quad
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);

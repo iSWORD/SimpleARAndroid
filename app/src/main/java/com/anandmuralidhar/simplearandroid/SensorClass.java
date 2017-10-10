@@ -23,7 +23,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
-import android.view.Display;
 import android.view.Surface;
 import android.view.View;
 
@@ -43,6 +42,7 @@ public class SensorClass implements SensorEventListener {
     public boolean isSensorsAvailable() {
         return isSensorsAvailable;
     }
+
     private native void SendGravityToNative(float gravityX, float gravityY, float gravityZ);
 
     public SensorClass(Activity mainActivity, View view) {
@@ -54,7 +54,7 @@ public class SensorClass implements SensorEventListener {
 
         // if sensor is not available, app will exit
         isSensorsAvailable = (mAccel != null);
-        mView= view;
+        mView = view;
 
         // initialize gravity vector to 0 before starting to filter inputs
         gravity[0] = 0.0f;
@@ -80,7 +80,6 @@ public class SensorClass implements SensorEventListener {
 
         Log.d("SensorClass", "Unregistering sensor listener");
         mSensorManager.unregisterListener(this);
-
     }
 
     // IIR filter parameter for accelerometer filtering. range [0.0f -> 1.0f]
@@ -88,12 +87,11 @@ public class SensorClass implements SensorEventListener {
     private static final float ACCEL_ALPHA = 0.8f;
 
     // Isolate the force of gravity with a low-pass filter.
-    private void CalculateGravityFromAccelerometer(float [] accel) {
+    private void CalculateGravityFromAccelerometer(float[] accel) {
 
         gravity[0] = ACCEL_ALPHA * gravity[0] + (1 - ACCEL_ALPHA) * accel[0];
         gravity[1] = ACCEL_ALPHA * gravity[1] + (1 - ACCEL_ALPHA) * accel[1];
         gravity[2] = ACCEL_ALPHA * gravity[2] + (1 - ACCEL_ALPHA) * accel[2];
-
     }
 
     @Override
@@ -101,7 +99,7 @@ public class SensorClass implements SensorEventListener {
 
         // wait for display to be initialized since we need to fetch device rotation before
         // processing sensor data
-        if(mView.getDisplay() == null) {
+        if (mView.getDisplay() == null) {
             return;
         }
 
@@ -109,8 +107,8 @@ public class SensorClass implements SensorEventListener {
         // we check for device orientation and rearrange event values so that subsequent
         // calculations can be oblivious to change in orientation
         deviceRotation = mView.getDisplay().getRotation();
-        float [] eventValues= new float[3];
-        switch(deviceRotation) {
+        float[] eventValues = new float[3];
+        switch (deviceRotation) {
 
             case Surface.ROTATION_0:
                 eventValues[0] = event.values[0];
@@ -135,7 +133,6 @@ public class SensorClass implements SensorEventListener {
                 eventValues[1] = -event.values[0];
                 eventValues[2] = event.values[2];
                 break;
-
         }
 
         switch (event.sensor.getType()) {
@@ -144,7 +141,6 @@ public class SensorClass implements SensorEventListener {
                 CalculateGravityFromAccelerometer(eventValues);
                 SendGravityToNative(gravity[0], gravity[1], gravity[2]);
                 break;
-
         }
     }
 
@@ -152,7 +148,6 @@ public class SensorClass implements SensorEventListener {
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
         // Do something here if sensor accuracy changes.
     }
-
 }
 
 
