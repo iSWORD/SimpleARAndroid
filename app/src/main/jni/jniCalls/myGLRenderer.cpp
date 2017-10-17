@@ -17,6 +17,16 @@
 #include <jni.h>
 #include "simpleARClass.h"
 
+JNIEXPORT void JNICALL
+Java_com_anandmuralidhar_simplearandroid_SimpleARActivity_LocationUpdate(JNIEnv *env,
+                                                                         jobject instance,
+                                                                         jfloat xDifference,
+                                                                         jfloat zDifference) {
+
+    // TODO
+
+}
+
 #ifdef __cplusplus
 extern "C" {
 #endif
