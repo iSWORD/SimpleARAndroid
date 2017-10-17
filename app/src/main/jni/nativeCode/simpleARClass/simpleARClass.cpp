@@ -118,26 +118,13 @@ void SimpleARClass::Render() {
     cameraMutex.unlock();
     back->Render();
 
-    // render the 3D model if we have tracked reference marker in query image
-
-    // make a copy of pnp result, it will be retained till result is updated again
-    translationVectorCopy = translationVector.clone();
-    rotationVectorCopy = rotationVector.clone();
-
-    // flip OpenCV results to be consistent with OpenGL's coordinate system
-    translationVectorCopy.at<double>(2, 0) = -translationVectorCopy.at<double>(2, 0);
-    rotationVectorCopy.at<double>(0, 0) = -rotationVectorCopy.at<double>(0, 0);
-    rotationVectorCopy.at<double>(1, 0) = -rotationVectorCopy.at<double>(1, 0);
     renderModel = true;
 
+    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0.0, .0, 70.0), glm::vec3(.0, .0, .0),
+                                       glm::vec3(.0, 1.0, .0));
 
-    cv::Mat defaultModelPosition = cv::Mat::zeros(3, 1, CV_64F);
-    defaultModelPosition.at<double>(2, 0) = -CAM_HEIGHT_FROM_FLOOR;
-    myGLCamera->UpdateModelMat(translationVectorCopy, rotationVectorCopy, defaultModelPosition);
 
-    gravityMutex.lock();
-    glm::mat4 mvpMat = myGLCamera->GetMVPAlignedWithGravity(gravity);
-    gravityMutex.unlock();
+    glm::mat4 mvpMat = myGLCamera->GetProjection() * viewMatrix;
 
     modelObject->Render3DModel(&mvpMat);
 
