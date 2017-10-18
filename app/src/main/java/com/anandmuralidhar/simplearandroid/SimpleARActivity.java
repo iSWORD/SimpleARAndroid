@@ -18,13 +18,19 @@ package com.anandmuralidhar.simplearandroid;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.location.Location;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -35,14 +41,6 @@ import com.google.android.gms.location.LocationResult;
 
 public class SimpleARActivity extends Activity {
     private final static Location BUILDING_LOCATION = createBuildingLocation();
-
-    private static Location createBuildingLocation() {
-        Location location = new Location("elo");
-        location.setLongitude(18.576544);
-        location.setLatitude(54.404915);
-        return location;
-    }
-
     private GLSurfaceView mGLView = null;
     private CameraClass mCameraObject;
     private boolean appIsExiting = false;
@@ -50,6 +48,29 @@ public class SimpleARActivity extends Activity {
     private SensorClass mSensorObject;
     private FusedLocationProviderClient locationClient;
     private LocationCallback locationCallback = createLocationCallback();
+    private SensorEventListener sensorListener = createSensorListener();
+
+    private SensorEventListener createSensorListener() {
+        return new SensorEventListener() {
+            @Override
+            public void onSensorChanged(SensorEvent sensorEvent) {
+                Log.i("Sensor", Math.toDegrees(sensorEvent.values[0]) + " " + Math.toDegrees(sensorEvent.values[0]) + " " + Math.toDegrees(sensorEvent.values[0]));
+//                float degrees[] = new float[3];
+//                for (int i = 0; i < 3; i++) {
+//                    degrees[i] = (float) Math.toDegrees(sensorEvent.values[i]);
+//                }
+                GyroscopeUpdated(sensorEvent.values);
+            }
+
+            @Override
+            public void onAccuracyChanged(Sensor sensor, int i) {
+
+            }
+        };
+    }
+
+    private SensorManager mSensorManager;
+    private Sensor mSensor;
 
     private native void CreateObjectNative(AssetManager assetManager, String pathToInternalDir);
 
@@ -59,12 +80,17 @@ public class SimpleARActivity extends Activity {
 
     private native void LocationUpdate(float xDifference, float zDifference);
 
+    private native void GyroscopeUpdated(float[] values);
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         initializeLocation();
         AssetManager assetManager = getAssets();
         String pathToInternalDir = getFilesDir().getAbsolutePath();
+
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
         mCameraObject = new CameraClass(this);
         if (!mCameraObject.IsResolutionSupported()) {
@@ -104,6 +130,7 @@ public class SimpleARActivity extends Activity {
         super.onResume();
 
         startLocationUpdates();
+        mSensorManager.registerListener(sensorListener, mSensor, SensorManager.SENSOR_DELAY_NORMAL);
 
         if (appIsExiting) {
             return;
@@ -130,6 +157,7 @@ public class SimpleARActivity extends Activity {
 
         super.onPause();
         stopLocationUpdates();
+        mSensorManager.unregisterListener(sensorListener);
         // Android suggests that we call onPause on GLSurfaceView
         if (mGLView != null) {
             mGLView.onPause();
@@ -194,17 +222,24 @@ public class SimpleARActivity extends Activity {
     private void locationReceived(Location lastLocation) {
         float[] xDiff = new float[3];
         float[] zDiff = new float[3];
-        Location.distanceBetween(lastLocation.getLatitude(), BUILDING_LOCATION.getLongitude(), BUILDING_LOCATION.getLatitude(), BUILDING_LOCATION.getLongitude(), xDiff);
-        Location.distanceBetween(BUILDING_LOCATION.getLatitude(), lastLocation.getLongitude(), BUILDING_LOCATION.getLatitude(), BUILDING_LOCATION.getLongitude(), zDiff);
+        Location.distanceBetween(lastLocation.getLatitude(), BUILDING_LOCATION.getLongitude(), BUILDING_LOCATION.getLatitude(), BUILDING_LOCATION.getLongitude(), zDiff);
+        Location.distanceBetween(BUILDING_LOCATION.getLatitude(), lastLocation.getLongitude(), BUILDING_LOCATION.getLatitude(), BUILDING_LOCATION.getLongitude(), xDiff);
         LocationUpdate(xDiff[0], zDiff[0]);
     }
 
     protected LocationRequest createLocationRequest() {
         LocationRequest mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(10000);
-        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setInterval(100);
+        mLocationRequest.setFastestInterval(50);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         return mLocationRequest;
+    }
+
+    private static Location createBuildingLocation() {
+        Location location = new Location("elo");
+        location.setLongitude(18.551498);
+        location.setLatitude(54.477291);
+        return location;
     }
 
     /**

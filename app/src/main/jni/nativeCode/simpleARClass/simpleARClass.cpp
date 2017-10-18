@@ -120,14 +120,16 @@ void SimpleARClass::Render() {
 
     renderModel = true;
 
-    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0.0, .0, 70.0), glm::vec3(.0, .0, .0),
+    float x2 = sin(userRotation.y);
+    float z2 = -cos(userRotation.z);
+
+    glm::mat4 viewMatrix = glm::lookAt(userPosition, userPosition + glm::vec3(x2, .0, z2),
                                        glm::vec3(.0, 1.0, .0));
 
 
     glm::mat4 mvpMat = myGLCamera->GetProjection() * viewMatrix;
 
     modelObject->Render3DModel(&mvpMat);
-
 
     CheckGLError("SimpleARClass::Render");
 
@@ -352,4 +354,13 @@ void SimpleARClass::TrackKeypointsAndUpdatePose() {
         PrintCVMat(rotationVector.t());
     }
     return;
+}
+
+void SimpleARClass::UpdateUserLocation(glm::vec3 tvec3) {
+    userPosition = tvec3;
+}
+
+void SimpleARClass::UpdateUserRotation(glm::vec3 tvec3) {
+
+    userRotation += tvec3;
 }

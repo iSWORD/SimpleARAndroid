@@ -17,21 +17,38 @@
 #include <jni.h>
 #include "simpleARClass.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+extern SimpleARClass *gSimpleARObject;
+
+JNIEXPORT void JNICALL
+Java_com_anandmuralidhar_simplearandroid_SimpleARActivity_GyroscopeUpdated(JNIEnv *env,
+                                                                           jobject instance,
+                                                                           jfloatArray values_) {
+    jfloat *values = env->GetFloatArrayElements(values_, NULL);
+
+    if (gSimpleARObject == NULL) {
+        return;
+    }
+    gSimpleARObject->UpdateUserRotation(glm::vec3(values[0], values[1], values[2]));
+
+    env->ReleaseFloatArrayElements(values_, values, 0);
+}
+
 JNIEXPORT void JNICALL
 Java_com_anandmuralidhar_simplearandroid_SimpleARActivity_LocationUpdate(JNIEnv *env,
                                                                          jobject instance,
                                                                          jfloat xDifference,
                                                                          jfloat zDifference) {
 
-    // TODO
+    if (gSimpleARObject == NULL) {
+        return;
+    }
+    gSimpleARObject->UpdateUserLocation(glm::vec3(xDifference * 10, .0, zDifference * 10));
 
 }
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-extern SimpleARClass *gSimpleARObject;
 
 JNIEXPORT void JNICALL
 Java_com_anandmuralidhar_simplearandroid_MyGLRenderer_DrawFrameNative(JNIEnv *env,

@@ -37,54 +37,73 @@
 class SimpleARClass {
 public:
     SimpleARClass();
+
     ~SimpleARClass();
-    void    PerformGLInits();
-    void    Render();
-    void    SetViewport(int width, int height);
-    void    ProcessCameraImage(cv::Mat cameraRGBImage);
-    void    SetCameraParams(int cameraPreviewWidth, int cameraPreviewHeight, float cameraFOV);
-    void    DoubleTapAction();
-    void    UpdateGravity(float gx, float gy, float gz);
+
+    void PerformGLInits();
+
+    void Render();
+
+    void SetViewport(int width, int height);
+
+    void ProcessCameraImage(cv::Mat cameraRGBImage);
+
+    void SetCameraParams(int cameraPreviewWidth, int cameraPreviewHeight, float cameraFOV);
+
+    void DoubleTapAction();
+
+    void UpdateGravity(float gx, float gy, float gz);
+
+    void UpdateUserLocation(glm::vec3 tvec3);
+
+    void UpdateUserRotation(glm::vec3 tvec3);
 
 private:
-    void    DetectAndHighlightCorners();
-    bool    DetectKeypointsInReferenceImage();
-    bool    MatchKeypointsInQueryImage();
-    void    TrackKeypointsAndUpdatePose();
+    void DetectAndHighlightCorners();
+
+    bool DetectKeypointsInReferenceImage();
+
+    bool MatchKeypointsInQueryImage();
+
+    void TrackKeypointsAndUpdatePose();
 
     cv::Ptr<cv::DescriptorMatcher> matcher;
     cv::Mat referenceDescriptors;
     std::vector<cv::KeyPoint> referenceKeypoints;
 
-    bool    initsDone;
-    int     screenWidth, screenHeight;
+    bool initsDone;
+    int screenWidth, screenHeight;
     cv::Mat cameraImageForBack;
-    BackTexture * back;
-    bool    newCameraImage;
-    int     cameraPreviewWidth, cameraPreviewHeight;
-    bool    trackingIsOn;
-    bool    pnpResultIsValid, newPnpResult;
-    bool    renderModel;
-    float   previewScaleFactor;
-    float   cameraFOV;
-    bool    doubleTapAction;
+    BackTexture *back;
+    bool newCameraImage;
+    int cameraPreviewWidth, cameraPreviewHeight;
+    bool trackingIsOn;
+    bool pnpResultIsValid, newPnpResult;
+    bool renderModel;
+    float previewScaleFactor;
+    float cameraFOV;
+    bool doubleTapAction;
 
-    std::mutex  cameraMutex;
+    std::mutex cameraMutex;
     cv::Ptr<cv::Feature2D> cornerDetector;
     std::vector<cv::KeyPoint> keyPoints, sourceInlierKeypoints, queryInlierKeypoints;
     std::vector<cv::Point2f> sourceInlierPoints, queryInlierPoints;
-    cv::Mat     translationVector, rotationVector;
+    cv::Mat translationVector, rotationVector;
     cv::Mat translationVectorCopy, rotationVectorCopy;
-    std::mutex  pnpMutex;
+    std::mutex pnpMutex;
 
     std::vector<cv::Point3f> sourceKeypointLocationsIn3D;
-    std::mutex  gravityMutex;
-    std::vector <float> gravity;
-    glm::vec3   sourceGravityVector;
+    std::mutex gravityMutex;
+    std::vector<float> gravity;
+    glm::vec3 sourceGravityVector;
 
-    std::vector <float> modelDefaultPosition;
-    MyGLCamera  * myGLCamera;
-    AssimpLoader * modelObject;
+    std::vector<float> modelDefaultPosition;
+    MyGLCamera *myGLCamera;
+    AssimpLoader *modelObject;
+
+    glm::vec3 userPosition = glm::vec3(.0, .0, .0);
+
+    glm::vec3 userRotation = glm::vec3(.0, .0, .0);
 
 };
 
