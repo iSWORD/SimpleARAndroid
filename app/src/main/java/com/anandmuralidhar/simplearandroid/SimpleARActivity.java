@@ -49,28 +49,9 @@ public class SimpleARActivity extends Activity {
     private FusedLocationProviderClient locationClient;
     private LocationCallback locationCallback = createLocationCallback();
     private SensorEventListener sensorListener = createSensorListener();
-
-    private SensorEventListener createSensorListener() {
-        return new SensorEventListener() {
-            @Override
-            public void onSensorChanged(SensorEvent sensorEvent) {
-                Log.i("Sensor", Math.toDegrees(sensorEvent.values[0]) + " " + Math.toDegrees(sensorEvent.values[0]) + " " + Math.toDegrees(sensorEvent.values[0]));
-//                float degrees[] = new float[3];
-//                for (int i = 0; i < 3; i++) {
-//                    degrees[i] = (float) Math.toDegrees(sensorEvent.values[i]);
-//                }
-                GyroscopeUpdated(sensorEvent.values);
-            }
-
-            @Override
-            public void onAccuracyChanged(Sensor sensor, int i) {
-
-            }
-        };
-    }
-
+    private final float[] accelerometerReading = new float[3];
+    private final float[] magnetometerReading = new float[3];
     private SensorManager mSensorManager;
-    private Sensor mSensor;
 
     private native void CreateObjectNative(AssetManager assetManager, String pathToInternalDir);
 
@@ -82,6 +63,20 @@ public class SimpleARActivity extends Activity {
 
     private native void GyroscopeUpdated(float[] values);
 
+    private SensorEventListener createSensorListener() {
+        return new SensorEventListener() {
+            @Override
+            public void onSensorChanged(SensorEvent event) {
+                old_orientationReceived(event.values);
+            }
+
+            @Override
+            public void onAccuracyChanged(Sensor sensor, int i) {
+
+            }
+        };
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -90,7 +85,6 @@ public class SimpleARActivity extends Activity {
         String pathToInternalDir = getFilesDir().getAbsolutePath();
 
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
         mCameraObject = new CameraClass(this);
         if (!mCameraObject.IsResolutionSupported()) {
@@ -130,7 +124,7 @@ public class SimpleARActivity extends Activity {
         super.onResume();
 
         startLocationUpdates();
-        mSensorManager.registerListener(sensorListener, mSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(sensorListener, mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION), SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_UI);
 
         if (appIsExiting) {
             return;
@@ -224,7 +218,7 @@ public class SimpleARActivity extends Activity {
         float[] zDiff = new float[3];
         Location.distanceBetween(lastLocation.getLatitude(), BUILDING_LOCATION.getLongitude(), BUILDING_LOCATION.getLatitude(), BUILDING_LOCATION.getLongitude(), zDiff);
         Location.distanceBetween(BUILDING_LOCATION.getLatitude(), lastLocation.getLongitude(), BUILDING_LOCATION.getLatitude(), BUILDING_LOCATION.getLongitude(), xDiff);
-        LocationUpdate(xDiff[0], zDiff[0]);
+        LocationUpdate(lastLocation.getLatitude() < BUILDING_LOCATION.getLatitude() ? -xDiff[0] : xDiff[0], lastLocation.getLongitude() < BUILDING_LOCATION.getLongitude() ? -zDiff[0] : zDiff[0]);
     }
 
     protected LocationRequest createLocationRequest() {
@@ -237,9 +231,18 @@ public class SimpleARActivity extends Activity {
 
     private static Location createBuildingLocation() {
         Location location = new Location("elo");
-        location.setLongitude(18.551498);
-        location.setLatitude(54.477291);
+        location.setLongitude(18.577014);
+        location.setLatitude(54.404975);
         return location;
+    }
+
+    private void old_orientationReceived(float[] values) {
+        float[] valuesInRadians = new float[3];
+        for (int i = 0; i < 3; i++) {
+            valuesInRadians[i] = (float) Math.toRadians(values[i]);
+        }
+        Log.i("OLD", values[0] + " " + values[1] + " " + values[2]);
+        GyroscopeUpdated(valuesInRadians);
     }
 
     /**

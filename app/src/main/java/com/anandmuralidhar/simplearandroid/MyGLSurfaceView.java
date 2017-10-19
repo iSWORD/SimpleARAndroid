@@ -13,17 +13,14 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
 package com.anandmuralidhar.simplearandroid;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.SurfaceHolder;
 
 class MyGLSurfaceView extends GLSurfaceView {
-
     private MyGLRenderer mRenderer;
 
     public MyGLSurfaceView(Context context, AttributeSet attrs) {
@@ -40,14 +37,10 @@ class MyGLSurfaceView extends GLSurfaceView {
 
             // calls onDrawFrame(...) continuously
             setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
-
         } catch (Exception e) {
 
             // Trouble, something's wrong!
             Log.e("MyGLSurfaceView", "Unable to create GLES context!", e);
-
         }
-
     }
-
 }

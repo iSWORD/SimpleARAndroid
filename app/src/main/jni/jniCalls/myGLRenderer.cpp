@@ -46,7 +46,7 @@ Java_com_anandmuralidhar_simplearandroid_SimpleARActivity_LocationUpdate(JNIEnv 
     if (gSimpleARObject == NULL) {
         return;
     }
-    gSimpleARObject->UpdateUserLocation(glm::vec3(xDifference * 10, .0, zDifference * 10));
+    gSimpleARObject->UpdateUserLocation(glm::vec3(xDifference, .0, zDifference));
 
 }
 

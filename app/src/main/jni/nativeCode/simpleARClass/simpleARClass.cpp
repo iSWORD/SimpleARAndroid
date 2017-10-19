@@ -120,11 +120,18 @@ void SimpleARClass::Render() {
 
     renderModel = true;
 
-    float x2 = sin(userRotation.y);
-    float z2 = -cos(userRotation.z);
+    float x2 = sin(userRotation.x);
+    float y2 = -cos(userRotation.y);
+    float z2 = -cos(userRotation.x);
+    float rotation = sin(userRotation.z);
 
-    glm::mat4 viewMatrix = glm::lookAt(userPosition, userPosition + glm::vec3(x2, .0, z2),
-                                       glm::vec3(.0, 1.0, .0));
+    glm::vec3 cameraPosition = userPosition;
+    glm::vec3 cameraPointing = glm::vec3(cameraPosition[0] + x2,
+                                         cameraPosition[1] + y2,
+                                         cameraPosition[2] + z2);
+    glm::vec3 cameraUp = glm::vec3(rotation, 1.0, .0);
+
+    glm::mat4 viewMatrix = glm::lookAt(cameraPosition, cameraPointing, cameraUp);
 
 
     glm::mat4 mvpMat = myGLCamera->GetProjection() * viewMatrix;
@@ -362,5 +369,5 @@ void SimpleARClass::UpdateUserLocation(glm::vec3 tvec3) {
 
 void SimpleARClass::UpdateUserRotation(glm::vec3 tvec3) {
 
-    userRotation += tvec3;
+    userRotation = tvec3;
 }
