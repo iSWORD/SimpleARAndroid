@@ -218,7 +218,7 @@ public class SimpleARActivity extends Activity {
         float[] zDiff = new float[3];
         Location.distanceBetween(lastLocation.getLatitude(), BUILDING_LOCATION.getLongitude(), BUILDING_LOCATION.getLatitude(), BUILDING_LOCATION.getLongitude(), zDiff);
         Location.distanceBetween(BUILDING_LOCATION.getLatitude(), lastLocation.getLongitude(), BUILDING_LOCATION.getLatitude(), BUILDING_LOCATION.getLongitude(), xDiff);
-        LocationUpdate(lastLocation.getLatitude() < BUILDING_LOCATION.getLatitude() ? -xDiff[0] : xDiff[0], lastLocation.getLongitude() < BUILDING_LOCATION.getLongitude() ? -zDiff[0] : zDiff[0]);
+        LocationUpdate(lastLocation.getLongitude() < BUILDING_LOCATION.getLongitude() ? -xDiff[0] : xDiff[0], lastLocation.getLatitude() < BUILDING_LOCATION.getLatitude() ? -zDiff[0] : zDiff[0]);
     }
 
     protected LocationRequest createLocationRequest() {
@@ -231,8 +231,8 @@ public class SimpleARActivity extends Activity {
 
     private static Location createBuildingLocation() {
         Location location = new Location("elo");
-        location.setLongitude(18.577014);
-        location.setLatitude(54.404975);
+        location.setLongitude(18.577408);
+        location.setLatitude(54.404937);
         return location;
     }
 
