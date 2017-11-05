@@ -11,9 +11,9 @@ if (propertiesFile.exists()) {
 model {
     android {
         compileSdkVersion = 26
-        buildToolsVersion = '26.0.0'
+        buildToolsVersion = '26.0.2'
         defaultConfig.with {
-            minSdkVersion.apiLevel = 14
+            minSdkVersion.apiLevel = 21
             targetSdkVersion.apiLevel = 26
             versionCode = 1
             versionName = '0.0.1'
@@ -38,5 +38,5 @@ model {
     }
 }
 dependencies {
-    compile 'com.android.support:appcompat-v7:26.0.1'
+    compile 'com.android.support:appcompat-v7:26.1.0'
 }

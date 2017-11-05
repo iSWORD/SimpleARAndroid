@@ -11,9 +11,9 @@ if (propertiesFile.exists()) {
 model {
     android {
         compileSdkVersion = 26
-        buildToolsVersion = '26.0.0'
+        buildToolsVersion = '26.0.2'
         defaultConfig.with {
-            minSdkVersion.apiLevel = 9
+            minSdkVersion.apiLevel = 21
             targetSdkVersion.apiLevel = 26
             versionCode = 1
             versionName = '0.0.1'
